@@ -1,0 +1,42 @@
+# //docker compose up -d
+version: '3.5'
+
+services:
+   db:
+      image: mysql:8.0.15
+      container_name: appsDB
+      restart: always
+      volumes:
+        - ./init.sql:/data/application/init.sql
+      command: --default-authentication-plugin=mysql_native_password  --init-file /data/application/init.sql
+
+      ports:
+       - '3306:3306'
+      environment:
+        MYSQL_ROOT_PASSWORD: 1234
+
+   app:
+      depends_on:
+       - db
+      image: phpmyadmin/phpmyadmin
+      container_name: phpmyadmin
+      restart: always
+      ports:
+       - '8080:80'
+      environment:
+        PMA_HOST: db
+
+   web:
+    build:
+      context: ./
+      target: dev
+    volumes:
+      - .:/src/app
+    command: npm run start:dev
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+      DEBUG: nodejs-docker-express:*
+
+
